@@ -3,14 +3,37 @@
 # rpmhelper
 # - create a tarball from the git repo.
 
+# Test if we can reach outside. If we can't we setup a
+# default proxy using webproxy:3128 or use the value of
+# DEFAULT_PROXY if set.
+check_and_set_proxy () {
+	echo "Checking proxy setup..."
+	if wget https://github.com >/dev/null 2>&1; then
+		echo "no proxy setup needed"
+	else
+		case $? in
+		4)      echo "Proxy setup needed. Using default of $DEFAULT_PROXY. Change by setting DEFAULT_PROXY"
+			[ -n "$DEFAULT_PROXY" ] || DEFAULT_PROXY=webproxy:3128
+			export HTTPS_PROXY=$DEFAULT_PROXY
+			export https_proxy=$DEFAULT_PROXY
+			export http_proxy=$DEFAULT_PROXY
+			;;
+                *)
+			echo "unxpected error from wget, giving up"
+			exit 1
+                esac
+	fi
+}
+
 # get the remote repo from the spec file
 set -e
-set -x
+#set -x
 
 cmd=$1
 
 case $cmd in
 git2tar)
+	check_and_set_proxy
 	git_source=https://github.com/vitessio/vitess.git
 	git_branch=master
 	tmpdir=$(mktemp -d -p $PWD vitess_workdir.XXXXXXXX) || {
