@@ -38,9 +38,9 @@ From `~/.rpmmacros`:
 
 * Setup your rpm environment and checkout this repo under `~/RPM/PKG/vitess`.
 * Build a tarball from the upstream git repo.
-** `./specfile_helper git2tar # builds a file like vitess-v2.2.0.rc.1.20180614.110325.tar.gz`
+  * `./specfile_helper git2tar # builds a file like vitess-v2.2.0.rc.1.20180614.110325.tar.gz`
 * Build the rpm:
-** `rpmbuild -ba vitess.spec` # to build the rpms
+  * `rpmbuild -ba vitess.spec` # to build the rpms
 
 # Contributing
 
