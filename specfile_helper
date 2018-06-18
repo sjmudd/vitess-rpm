@@ -25,7 +25,6 @@ check_and_set_proxy () {
 	fi
 }
 
-# get the remote repo from the spec file
 set -e
 #set -x
 
