@@ -18,13 +18,16 @@ git2tar)
 		exit 1
 	}
 	git clone $git_source $tmpdir
-	git_commit_hash=$(cd $tmpdir && git log -n1 | head -1 | awk '{ print $2 }' | cut -c1-8)
+	git_commit_hash=$(cd $tmpdir && git rev-parse --short HEAD)
+	git_branch=$(cd $tmpdir && git rev-parse --abbrev-ref HEAD)
 	git_commit_ts=$(cd $tmpdir && git log -n1 --pretty=format:%ai | sed -e 's/^\(....-..-.. ..:..:..\).*/\1/' -e 's/[-:]//g' -e 's/ /./')
 	git_latest_tag=$(cd $tmpdir && git tag | tail -1 | sed -e 's/-/./g')
-	echo "git_latest_tag: $git_latest_tag"
+	echo "git_branch:     $git_branch"
 	echo "git_revision:   $git_commit_hash"
 	echo "git_commit_ts:  $git_commit_ts"
+	echo "git_latest_tag: $git_latest_tag"
 	rpm_version=${git_latest_tag}.${git_commit_ts} # hack!
+	echo "$git_branch"      > GIT_BRANCH
 	echo "$git_latest_tag"  > GIT_LATEST_TAG
 	echo "$git_commit_hash" > GIT_COMMIT_HASH
 	echo "$git_commit_ts"   > GIT_COMMIT_TIMESTAMP
