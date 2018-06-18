@@ -29,23 +29,15 @@ Version: %vitess_version
 BuildRoot: %{_tmppath}/%{name}-%{version}-buildroot
 
 # Determine package build requirements
-BuildRequires: golang >= 1.9
-BuildRequires: git
-BuildRequires: python-virtualenv
-BuildRequires: MySQL-python
-BuildRequires: automake
-BuildRequires: bison
-BuildRequires: curl
+BuildRequires: curl   # required by rpm so should always be present
 BuildRequires: gcc-c++
 BuildRequires: git
-BuildRequires: golang
-BuildRequires: libtool
+BuildRequires: golang >= 1.9
 BuildRequires: make
 BuildRequires: openssl-devel
 BuildRequires: pkgconfig
-BuildRequires: python-devel
 BuildRequires: python-virtualenv
-BuildRequires: unzip
+BuildRequires: unzip   # required by rpm-build so should always be present
 
 #Requires: FIXME this needs filling in and is missing at the moment
 
