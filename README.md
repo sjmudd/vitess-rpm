@@ -17,3 +17,32 @@ tagged release in vitess and to follow that with the latest
 commit on the master branch. This should be more flexible but
 seems to work so far providing a version of the following at
 the moment: v2.2.0.rc.1.20180614.110325.
+
+How to use this
+---------------
+
+My layout is slightly odd but keeps source and specfiles in the same location.
+
+From ~/.rpmmacros
+```
+# %_topdir defines the top directory to be used for RPM building purposes
+%_topdir        %(echo $HOME)/RPM
+%_sourcedir     %{_topdir}/SRC/%{name}
+%_specdir       %{_topdir}/SRC/%{name}
+%_tmppath       %{_topdir}/TMP
+%_builddir      %{_topdir}/TMP
+%_rpmdir        %{_topdir}/PKG
+%_srcrpmdir     %{_topdir}/PKG
+%_buildroot     %{_topdir}/TMP/%{name}-%{version}-root
+# careful about the UPPER case
+%_rpmfilename   %{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}.rpm
+%tmpdir         %{_topdir}/TMP
+```
+
+Setup your rpm environment and checkout this repo under `~/RPM/PKG/vitess`.
+
+Build a tarball from the upstream git repo.
+* `./specfile_helper git2tar # builds a file like vitess-v2.2.0.rc.1.20180614.110325.tar.gz`
+Build the rpm:
+* `rpmbuild -ba vitess.spec` # to build the rpms
+
