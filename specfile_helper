@@ -1,0 +1,36 @@
+#!/bin/sh
+#
+# rpmhelper
+# - create a tarball from the git repo.
+
+# get the remote repo from the spec file
+set -e
+set -x
+
+cmd=$1
+
+case $cmd in
+git2tar)
+	git_source=https://github.com/vitessio/vitess.git
+	git_branch=master
+	tmpdir=$(mktemp -d -p $PWD vitess_workdir.XXXXXXXX) || {
+		echo "failed to make a tmpdir"
+		exit 1
+	}
+	git clone $git_source $tmpdir
+	git_commit_hash=$(cd $tmpdir && git log -n1 | head -1 | awk '{ print $2 }' | cut -c1-8)
+	git_commit_ts=$(cd $tmpdir && git log -n1 --pretty=format:%ai | sed -e 's/^\(....-..-.. ..:..:..\).*/\1/' -e 's/[-:]//g' -e 's/ /./')
+	git_latest_tag=$(cd $tmpdir && git tag | tail -1 | sed -e 's/-/./g')
+	echo "git_latest_tag: $git_latest_tag"
+	echo "git_revision:   $git_commit_hash"
+	echo "git_commit_ts:  $git_commit_ts"
+	rpm_version=${git_latest_tag}.${git_commit_ts} # hack!
+	echo "$git_latest_tag"  > GIT_LATEST_TAG
+	echo "$git_commit_hash" > GIT_COMMIT_HASH
+	echo "$git_commit_ts"   > GIT_COMMIT_TIMESTAMP
+	echo "$rpm_version"     > RPM_VERSION
+	( cd $tmpdir && git archive --prefix=vitess-${rpm_version}/ --format=tar $git_branch ) | gzip -9 > vitess-${rpm_version}.tar.gz
+	;;
+*)	echo "unknown command: $cmd"
+	exit 1
+esac
