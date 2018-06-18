@@ -44,7 +44,7 @@ From `~/.rpmmacros`:
 
 # Contributing
 
-Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of conduct, and the process for submitting pull requests to us.
+If you would like to contribute please file an issue or pull request as usual.
 
 # Authors
 
