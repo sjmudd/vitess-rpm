@@ -8,11 +8,13 @@
 %define vtroot /vt
 %define vtbin %{vtroot}/bin
 %define vtweb %{vtroot}/web
-# UID/GID setup              # Fix this to make it configurable from an input define setting
-%define vitess_uid   299     # set unless vitess_uid is set in which case we use that value
-%define vitess_gid   299     # set unless vitess_gid is set in which case we use that value
-%define vitess_version v2.2.0.rc.1.20180614.110325
-##define vitess_version %(cat %SOURCE_DIR/RPM_VERSION)
+# Vitess UID/GID can be modified from the defaults with:
+#     --define 'vitess_uid 999'
+#     --define 'vitess_gid 999'
+%{?!vitess_uid: %define vitess_uid 299}
+%{?!vitess_gid: %define vitess_gid 299}
+# The vitess_version will be updated when running: ./specfile_helper git2tar
+%define vitess_version v2.2.0.rc.1.20180618.100601
 
 Name: vitess
 Summary: Vitess is a database clustering system for horizontal scaling of MySQL.
@@ -22,14 +24,18 @@ License: Apache License - Version 2.0, January 2004
 
 #GitSource: https://github.com/vitessio/vitess.git
 #GitBranch: master 
-Source: https://github.com/vitessio/vitess-%{version}.tar.gz
-Patch: dev.env.patch
-Version: %vitess_version
+Source0: https://github.com/vitessio/vitess-%{version}.tar.gz
+Patch0: dev.env.patch
+Version: %{vitess_version}
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-buildroot
 
-# Determine package build requirements
-BuildRequires: curl   # required by rpm so should always be present
+# Determine packaging requirements
+# curl:  required by rpm so should always be present
+# unzip: required by rpm-build so should always be present
+BuildRequires: curl
+BuildRequires: unzip
+# other stuff
 BuildRequires: gcc-c++
 BuildRequires: git
 BuildRequires: golang >= 1.9
@@ -37,7 +43,10 @@ BuildRequires: make
 BuildRequires: openssl-devel
 BuildRequires: pkgconfig
 BuildRequires: python-virtualenv
-BuildRequires: unzip   # required by rpm-build so should always be present
+BuildRequires: wget
+BuildRequires: mysql-community-client >= 5.7
+BuildRequires: mysql-community-libs-compat >= 5.7
+BuildRequires: mysql-community-libs >= 5.7
 
 #Requires: FIXME this needs filling in and is missing at the moment
 
@@ -65,7 +74,7 @@ has now been adopted by many enterprises for their production needs.
 %prep
 umask 022
 %setup
-%patch -p1
+%patch0 -p1
 
 ############################################################################
 
