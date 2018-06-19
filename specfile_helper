@@ -12,16 +12,18 @@ check_and_set_proxy () {
 		echo "no proxy setup needed"
 	else
 		case $? in
-		4)      echo "Proxy setup needed. Using default of $DEFAULT_PROXY. Change by setting DEFAULT_PROXY"
-			[ -n "$DEFAULT_PROXY" ] || DEFAULT_PROXY=webproxy:3128
+		4)	[ -n "$DEFAULT_PROXY" ] || {
+				DEFAULT_PROXY=webproxy:3128
+				echo "Proxy setup needed. Using default of $DEFAULT_PROXY. Change by setting DEFAULT_PROXY"
+			}
 			export HTTPS_PROXY=$DEFAULT_PROXY
 			export https_proxy=$DEFAULT_PROXY
 			export http_proxy=$DEFAULT_PROXY
 			;;
-                *)
+		*)
 			echo "unxpected error from wget, giving up"
 			exit 1
-                esac
+		esac
 	fi
 }
 
@@ -35,26 +37,38 @@ git2tar)
 	check_and_set_proxy
 	git_source=https://github.com/vitessio/vitess.git
 	git_branch=master
+	# create temporary directory
 	tmpdir=$(mktemp -d -p $PWD vitess_workdir.XXXXXXXX) || {
 		echo "failed to make a tmpdir"
 		exit 1
 	}
 	git clone $git_source $tmpdir
-	git_commit_hash=$(cd $tmpdir && git rev-parse --short HEAD)
-	git_branch=$(cd $tmpdir && git rev-parse --abbrev-ref HEAD)
+	git_commit_hash=$(cd $tmpdir && git log -n1 | head -1 | awk '{ print $2 }' | cut -c1-8)
 	git_commit_ts=$(cd $tmpdir && git log -n1 --pretty=format:%ai | sed -e 's/^\(....-..-.. ..:..:..\).*/\1/' -e 's/[-:]//g' -e 's/ /./')
 	git_latest_tag=$(cd $tmpdir && git tag | tail -1 | sed -e 's/-/./g')
-	echo "git_branch:     $git_branch"
+	echo "git_latest_tag: $git_latest_tag"
 	echo "git_revision:   $git_commit_hash"
 	echo "git_commit_ts:  $git_commit_ts"
-	echo "git_latest_tag: $git_latest_tag"
 	rpm_version=${git_latest_tag}.${git_commit_ts} # hack!
-	echo "$git_branch"      > GIT_BRANCH
+	tarball=vitess-${rpm_version}.tar.gz
 	echo "$git_latest_tag"  > GIT_LATEST_TAG
 	echo "$git_commit_hash" > GIT_COMMIT_HASH
 	echo "$git_commit_ts"   > GIT_COMMIT_TIMESTAMP
 	echo "$rpm_version"     > RPM_VERSION
-	( cd $tmpdir && git archive --prefix=vitess-${rpm_version}/ --format=tar $git_branch ) | gzip -9 > vitess-${rpm_version}.tar.gz
+	( cd $tmpdir && git archive --prefix=vitess-${rpm_version}/ --format=tar $git_branch ) | gzip -9 > $tarball
+	echo "built tar ball: $tarball"
+	# check if the source needs patching in the spec file.
+	echo "Checking if vitess_version needs patching..."
+	spec_version=$(grep '^%define vitess_version' vitess.spec | awk '{ print $3 }')
+	if [ "$spec_version" = "$rpm_version" ]; then
+		echo "vitess.spec has the right vitess_version: $rpm_version"
+	else
+		echo "Patching vitess.spec... (vitess_version: $spec_version ===> $rpm_version)"
+		sed -i -e "s/^%define vitess_version .*/%define vitess_version $rpm_version/" vitess.spec
+	fi
+
+	# clearn up temporary directory
+	[ -n "$tmpdir" -a "$tmpdir" != / ] && rm -rf "$tmpdir"
 	;;
 *)	echo "unknown command: $cmd"
 	exit 1
